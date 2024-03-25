@@ -1,5 +1,8 @@
+import 'package:delivery_app/firebase_auth_implementation/firebase_auth_services.dart';
 import 'package:delivery_app/login_page.dart';
 import 'package:flutter/material.dart';
+import 'package:material_text_fields/material_text_fields.dart';
+import 'package:material_text_fields/utils/form_validation.dart';
 import 'package:textfields/textfields.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -11,7 +14,8 @@ class RegistrationScreen extends StatefulWidget {
 }
 
 class _RegistrationScreenState extends State<RegistrationScreen> {
-  final _auth = FirebaseAuth.instance;
+  final FirebaseAuthService _auth = FirebaseAuthService();
+  // final _auth = FirebaseAuth.instance;
   late String username;
   late String password;
   String selectedCountryCode = "+994";
@@ -19,20 +23,43 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   final TextEditingController _controllerUsername = TextEditingController();
   final TextEditingController _controllerEmail = TextEditingController();
   final TextEditingController _controllerPassword = TextEditingController();
-  void _registerButtonPressed(BuildContext context) {
-    if (_controllerName.text.isEmpty ||
-        _controllerUsername.text.isEmpty ||
-        _controllerEmail.text.isEmpty ||
-        _controllerPassword.text.isEmpty) {
+  late bool _passwordVisible;
+  void initState() {
+    _passwordVisible = false;
+  }
+
+  void dispose() {
+    _controllerName.dispose();
+    _controllerUsername.dispose();
+    _controllerEmail.dispose();
+    _controllerPassword.dispose();
+    super.dispose();
+  }
+
+  void _signUp() async {
+    String name = _controllerName.text;
+    String username = _controllerUsername.text;
+    String email = _controllerEmail.text;
+    String password = _controllerPassword.text;
+    User? user = await _auth.signUpWithEmailAndPassword(email, password);
+    if (user != null) {
+      print('User is succesfully created');
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => LoginScreen()));
+    } else {
       showDialog(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
             title: Text('Error'),
-            content: Text('Please fill in all fields.'),
+            content: Text('Please enter correct information.'),
+            backgroundColor: Colors.white,
             actions: <Widget>[
               TextButton(
-                child: Text('Close'),
+                child: Text(
+                  'Close',
+                  style: TextStyle(color: Colors.blue),
+                ),
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
@@ -41,22 +68,7 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
           );
         },
       );
-    } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => LoginScreen()),
-      );
-    }
-  }
-
-  Future<void> registerUser(String username, String password) async {
-    try {
-      await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: username,
-        password: password,
-      );
-    } catch (e) {
-      print("Hata: $e");
+      print('Somer error happened');
     }
   }
 
@@ -64,108 +76,108 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Register')),
-      body: Column(
-        children: [
-          SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.all(15.0),
-            child: BorderTextFieldWithIcon(
-              controller: _controllerName,
-              hintText: "Name",
-              prefixIcon: Icon(
-                Icons.people,
-                // color: Colors.white,
-              ),
-              suffixIcon: Icon(
-                Icons.email,
-                // color: Colors.white,
-              ),
-            ),
-          ),
-          SizedBox(
-            height: 20,
-          ),
-          Padding(
-            padding: const EdgeInsets.all(15.0),
-            child: BorderTextFieldWithIcon(
-              hintText: 'E-mail',
-              controller: _controllerEmail,
-              prefixIcon: Icon(
-                Icons.people,
-                // color: Colors.white,
-              ),
-              suffixIcon: Icon(
-                Icons.email,
-                // color: Colors.white,
+      appBar: AppBar(
+        title: Text('Register'),
+        automaticallyImplyLeading: false,
+      ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: MaterialTextField(
+                keyboardType: TextInputType.name,
+                hint: 'Name',
+                textInputAction: TextInputAction.next,
+                prefixIcon: const Icon(Icons.person_pin_sharp),
+                controller: _controllerUsername,
               ),
             ),
-          ),
-          SizedBox(
-            height: 20,
-          ),
-          Padding(
-            padding: const EdgeInsets.all(15.0),
-            child: BorderTextFieldWithIcon(
-              controller: _controllerUsername,
-              hintText: 'Username',
-              prefixIcon: Icon(
-                Icons.people,
-                // color: Colors.white,
-              ),
-              suffixIcon: Icon(
-                Icons.email,
-                // color: Colors.white,
+            SizedBox(
+              height: 20,
+            ),
+            Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: MaterialTextField(
+                keyboardType: TextInputType.emailAddress,
+                hint: 'Email',
+                textInputAction: TextInputAction.next,
+                prefixIcon: const Icon(Icons.email_outlined),
+                controller: _controllerEmail,
+                validator: FormValidation.emailTextField,
               ),
             ),
-          ),
-          SizedBox(
-            height: 20,
-          ),
-          Padding(
-            padding: const EdgeInsets.all(15.0),
-            child: BorderTextFieldWithIcon(
-              hintText: 'Password',
-              obscureText: true,
-              controller: _controllerPassword,
-              prefixIcon: Icon(
-                Icons.people,
-                // color: Colors.white,
-              ),
-              suffixIcon: Icon(
-                Icons.password,
-                // color: Colors.white,
+            SizedBox(
+              height: 20,
+            ),
+            Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: MaterialTextField(
+                keyboardType: TextInputType.name,
+                hint: 'Username',
+                textInputAction: TextInputAction.next,
+                prefixIcon: const Icon(Icons.person),
+                controller: _controllerUsername,
               ),
             ),
-          ),
-          SizedBox(
-            height: 20,
-          ),
-          Padding(
-            padding: const EdgeInsets.all(40.0),
-            child: SizedBox(
-                width: 200,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    _registerButtonPressed(context);
-                    registerUser(username, password);
-                    CollectionReference collRef =
-                        FirebaseFirestore.instance.collection('clientRegister');
-                    collRef.add({
-                      'Username': _controllerUsername.text,
-                      'Password': _controllerPassword.text,
-                      'Email': _controllerEmail.text,
-                      'Name': _controllerName.text
+            SizedBox(
+              height: 20,
+            ),
+            Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: MaterialTextField(
+                keyboardType: TextInputType.emailAddress,
+                hint: 'Password',
+                textInputAction: TextInputAction.done,
+                obscureText: !_passwordVisible,
+                // theme: FilledOrOutlinedTextTheme(
+                //   // fillColor: Colors.green.withAlpha(50),
+                //   radius: 12,
+                // ),
+                prefixIcon: Icon(Icons.lock),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _passwordVisible = !_passwordVisible;
                     });
                   },
-                  child: Text(
-                    'Register',
-                    style: TextStyle(fontSize: 20),
-                  ),
-                )),
-          ),
-        ],
+                ),
+                controller: _controllerPassword,
+                validator: FormValidation.requiredTextField,
+              ),
+            ),
+            SizedBox(
+              height: 20,
+            ),
+            Padding(
+              padding: const EdgeInsets.all(40.0),
+              child: SizedBox(
+                  width: 200,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      _signUp();
+                      CollectionReference collRef = FirebaseFirestore.instance
+                          .collection('clientRegister');
+                      collRef.add({
+                        'Username': _controllerUsername.text,
+                        'Password': _controllerPassword.text,
+                        'Email': _controllerEmail.text,
+                        'Name': _controllerName.text
+                      });
+                    },
+                    child: Text(
+                      'Register',
+                      style: TextStyle(fontSize: 20),
+                    ),
+                  )),
+            ),
+          ],
+        ),
       ),
     );
   }
